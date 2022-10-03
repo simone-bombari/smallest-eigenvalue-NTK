@@ -13,7 +13,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--i')
 args = parser.parse_args()
 
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = 'cpu'
 loss_function = 'MSE'
 

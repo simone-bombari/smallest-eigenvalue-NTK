@@ -5,7 +5,7 @@ import torchvision
 import matplotlib.pyplot as plt
 import pickle
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import TensorDataset, DataLoader, Subset
 import torch.multiprocessing as mpt
 import os
 import time
@@ -20,6 +20,21 @@ def build_Gaussian_dataset(N, d):
     return dataset
 
 
+
+def call_partial_mnist(N, batch_size):
+    dataset_train = torchvision.datasets.MNIST('./data/',
+                                               train=True,
+                                               download=True,
+                                               transform=torchvision.transforms.ToTensor())
+
+    indices = torch.arange(N)
+    subset_data = Subset(dataset_train, indices)
+   
+    
+    return dataset_train
+    
+    
+    
 
 class FullyConnected_4relu(nn.Module):
     def __init__(self, d):
@@ -55,7 +70,44 @@ class FullyConnected_4relu(nn.Module):
             num_features *= s
         return num_features
 
+
     
+    
+class FullyConnected_4relu_mnist(nn.Module):
+    def __init__(self, n, d=784):
+        self.n = n
+        self.d = d
+        super(FullyConnected_4relu_mnist, self).__init__()
+        
+        self.fc1 = nn.Linear(d, n, bias=False)
+        nn.init.kaiming_normal_(self.fc1.weight, nonlinearity='sigmoid')
+        self.fc2 = nn.Linear(n, n, bias=False)
+        nn.init.kaiming_normal_(self.fc2.weight, nonlinearity='sigmoid')
+        self.fc3 = nn.Linear(n, n, bias=False)
+        nn.init.kaiming_normal_(self.fc3.weight, nonlinearity='sigmoid')
+        self.fc4 = nn.Linear(n, 1, bias=False)
+        nn.init.kaiming_normal_(self.fc4.weight, mode='fan_out', nonlinearity='sigmoid')
+        
+
+    def forward(self, x):
+        
+        activation = F.relu  #torch.sigmoid  #
+        
+        x = x.view(-1, self.num_flat_features(x))
+        x = activation(self.fc1(x))
+        x = activation(self.fc2(x))
+        x = activation(self.fc3(x))
+        x = self.fc4(x)
+        return x
+
+    
+    def num_flat_features(self, x):
+        size = x.size()[1:]  # all dimensions except the batch dimension
+        num_features = 1
+        for s in size:
+            num_features *= s
+        return num_features
+
     
 
 class FullyConnected_3sigm(nn.Module):
